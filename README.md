@@ -17,11 +17,9 @@ installations are restricted or non-ideal.
 
 ## Installation
 
-- Download the latest version of sanoid-portable from the GitHub releases and make it executable.
-- [***Assimilate***](https://github.com/jart/cosmopolitan/blob/3.9.7/tool/cosmocc/README.md#installation) the
-  sanoid-portable binary to transform it into a native binary for the current system.
-- Create symbolic links for each tool you plan to use (sanoid-portable uses the invoking command name (`argv[0]`) to
-determine which tool it runs.
+The following steps will download sanoid-portable, make it executable, transform
+([*assimilate*](https://github.com/jart/cosmopolitan/blob/3.9.7/tool/cosmocc/README.md#installation)) it into a native
+binary for your system, and set up symbolic links for each tool (`sanoid`, `syncoid`, `findoid`):
 
 ```console
 wget https://github.com/decoyjoe/sanoid-portable/releases/latest/download/sanoid-portable
