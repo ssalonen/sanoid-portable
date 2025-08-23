@@ -17,11 +17,9 @@ installations are restricted or non-ideal.
 
 ## Installation
 
-- Download the latest version of sanoid-portable from the GitHub releases and make it executable.
-- [***Assimilate***](https://github.com/jart/cosmopolitan/blob/3.9.7/tool/cosmocc/README.md#installation) the
-  sanoid-portable binary to transform it into a native binary for the current system.
-- Create symbolic links for each tool you plan to use (sanoid-portable uses the invoking command name (`argv[0]`) to
-determine which tool it runs.
+The following steps will download sanoid-portable, make it executable, transform
+([*assimilate*](https://github.com/jart/cosmopolitan/blob/3.9.7/tool/cosmocc/README.md#installation)) it into a native
+binary for your system, and set up symbolic links for each tool (`sanoid`, `syncoid`, `findoid`):
 
 ```console
 wget https://github.com/decoyjoe/sanoid-portable/releases/latest/download/sanoid-portable
@@ -82,6 +80,19 @@ We stand on the shoulders of giants. Thanks to:
 - [G4Vi/Perl-Dist-APPerl](https://github.com/G4Vi/Perl-Dist-APPerl) for the tooling to create single-binary portable
   Perl distributions.
 - [jart/cosmopolitan](https://github.com/jart/cosmopolitan) for making truly cross-platform portable binaries possible.
+
+## Releasing a new version
+
+The release process is fully automated via GitHub Actions. To release a new version:
+
+1. In [versions.json](./versions.json), increment the `PackagingRevision` number or if updating the `Sanoid` version then
+   reset `PackagingRevision` back to `1`.
+1. Update the [CHANGELOG.md](./CHANGELOG.md) to include release notes for the new version.
+1. Merge the changes to the mainline branch.
+1. Create a new GitHub release for the new version and add the release notes.
+
+The GitHub release will trigger a GitHub Actions run which will build the sanoid-portable binary and attach it to the
+release as an artifact.
 
 ## License
 
