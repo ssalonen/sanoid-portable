@@ -81,6 +81,19 @@ We stand on the shoulders of giants. Thanks to:
   Perl distributions.
 - [jart/cosmopolitan](https://github.com/jart/cosmopolitan) for making truly cross-platform portable binaries possible.
 
+## Releasing a new version
+
+The release process is fully automated via GitHub Actions. To release a new version:
+
+1. In [versions.json](./versions.json), increment the `PackagingRevision` number or if updating the `Sanoid` version then
+   reset `PackagingRevision` back to `1`.
+1. Update the [CHANGELOG.md](./CHANGELOG.md) to include release notes for the new version.
+1. Merge the changes to the mainline branch.
+1. Create a new GitHub release for the new version and add the release notes.
+
+The GitHub release will trigger a GitHub Actions run which will build the sanoid-portable binary and attach it to the
+release as an artifact.
+
 ## License
 
 This project is licensed under the GPL v3.0 license - see the [LICENSE](LICENSE) file for details.
