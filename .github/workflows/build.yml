@@ -113,19 +113,16 @@ jobs:
       - name: Download sanoid-portable artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.build_arm.outputs.artifact_name }}
+          name: ${{ needs.build-arm.outputs.artifact_name }}
 
       - name: Test on macOS
         run: |
           set -e
 
-          chmod +x sanoid-portable
+          cd output
 
-          ln -sf sanoid-portable sanoid
-          ln -sf sanoid-portable syncoid
-          ln -sf sanoid-portable findoid
+          chmod +x sanoid syncoid findoid
 
-          ./sanoid-portable --help
           ./sanoid --help
           ./syncoid --help
           ./findoid --help
