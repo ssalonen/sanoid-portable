@@ -62,18 +62,11 @@ jobs:
       - name: Install PERL_MM_USE_DEFAULT
         run: echo "PERL_MM_USE_DEFAULT=1" >> $GITHUB_ENV
 
-      - name: Install dependencies
+- name: Install dependencies
         run: |
-          cpanm -T Config::IniFiles Capture::Tiny PAR::Packer
-
-      - name: Fix PAR::Packer version
-        run: |
-          perl -MExtUtils::Command -e 'touch' /System/Library/Perl/Extras/5.34/PAR/StrippedPARL/Static.pm
-
-      - name: Clone sanoid
-        run: |
-          git clone --depth 1 https://github.com/jimsalterjrs/sanoid.git sanoid_source
-          mkdir -p output
+          cpanm -T Config::IniFiles Capture::Tiny
+          cpanm --uninstall PAR::Packer || true
+          cpanm PAR::Packer
 
       - name: Package sanoid
         run: |
