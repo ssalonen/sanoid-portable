@@ -48,6 +48,108 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  build-arm:
+    runs-on: macos-latest
+    outputs:
+      artifact_name: ${{ steps.set_artifact_name.outputs.artifact_name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install cpanm
+        run: brew install cpanminus
+
+      - name: Install PERL_MM_USE_DEFAULT
+        run: echo "PERL_MM_USE_DEFAULT=1" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: |
+          cpanm -T Config::IniFiles Capture::Tiny
+
+      - name: Clone sanoid
+        run: |
+          git clone --depth 1 https://github.com/jimsalterjrs/sanoid.git sanoid_source
+          mkdir -p output
+
+      - name: Package sanoid
+        run: |
+          pp -o output/sanoid sanoid_source/sanoid
+
+      - name: Package syncoid
+        run: |
+          pp -o output/syncoid sanoid_source/syncoid
+
+      - name: Package findoid
+        run: |
+          pp -o output/findoid sanoid_source/findoid
+
+      - name: Create portable wrapper
+        run: |
+          cat > output/sanoid-portable << 'EOF'
+          #!/bin/bash
+          SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+          TOOL="$(basename "$0")"
+          case "$TOOL" in
+            sanoid-portable)
+              TOOL= sanoid
+              ;;
+            sanoid|syncoid|findoid)
+              ;;
+            *)
+              TOOL= sanoid
+              ;;
+          esac
+          exec "$SCRIPT_DIR/$TOOL" "$@"
+          EOF
+          chmod +x output/sanoid-portable
+
+          ln -s sanoid-portable output/sanoid
+          ln -s sanoid-portable output/syncoid
+          ln -s sanoid-portable output/findoid
+
+      - name: Set artifact name
+        id: set_artifact_name
+        run: echo "artifact_name=sanoid-portable.arm.${{ github.sha }}.${{ github.run_number }}" >> $GITHUB_OUTPUT
+
+      - name: Upload built sanoid-portable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set_artifact_name.outputs.artifact_name }}
+          path: output/sanoid-portable
+          if-no-files-found: error
+          retention-days: 1
+
+  test-arm:
+    needs: build-arm
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download sanoid-portable artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build_arm.outputs.artifact_name }}
+
+      - name: Test on macOS
+        run: |
+          set -e
+
+          chmod +x sanoid-portable
+
+          ln -sf sanoid-portable sanoid
+          ln -sf sanoid-portable syncoid
+          ln -sf sanoid-portable findoid
+
+          ./sanoid-portable --help
+          ./sanoid --help
+          ./syncoid --help
+          ./findoid --help
+
+          ./sanoid --version
+          ./syncoid --version
+          ./findoid --version
+
   test:
     needs: build
     runs-on: ubuntu-24.04
