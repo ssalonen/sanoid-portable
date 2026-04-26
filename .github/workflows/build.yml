@@ -65,44 +65,18 @@ jobs:
       - name: Install dependencies
         run: |
           cpanm -T Config::IniFiles Capture::Tiny
-          cpanm --uninstall PAR::Packer || true
-          cpanm PAR::Packer
 
-      - name: Package sanoid
+      - name: Create wrapper scripts
         run: |
-          pp -o output/sanoid sanoid_source/sanoid
+          mkdir -p output
+          cp -r sanoid_source/* output/
+          chmod +x output/sanoid output/syncoid output/findoid
 
-      - name: Package syncoid
-        run: |
-          pp -o output/syncoid sanoid_source/syncoid
+          for tool in sanoid syncoid findoid; do
+            sed -i '' '1s|#!.*perl.*|#!/usr/bin/perl|' "output/${tool}"
+          done
 
-      - name: Package findoid
-        run: |
-          pp -o output/findoid sanoid_source/findoid
-
-      - name: Create portable wrapper
-        run: |
-          cat > output/sanoid-portable << 'EOF'
-          #!/bin/bash
-          SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-          TOOL="$(basename "$0")"
-          case "$TOOL" in
-            sanoid-portable)
-              TOOL= sanoid
-              ;;
-            sanoid|syncoid|findoid)
-              ;;
-            *)
-              TOOL= sanoid
-              ;;
-          esac
-          exec "$SCRIPT_DIR/$TOOL" "$@"
-          EOF
-          chmod +x output/sanoid-portable
-
-          ln -s sanoid-portable output/sanoid
-          ln -s sanoid-portable output/syncoid
-          ln -s sanoid-portable output/findoid
+          ls -la output/
 
       - name: Set artifact name
         id: set_artifact_name
