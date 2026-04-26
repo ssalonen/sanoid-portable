@@ -65,10 +65,22 @@ jobs:
       - name: Install dependencies
         run: |
           cpanm -T Config::IniFiles Capture::Tiny
+          cpanm PAR::Packer || true
+
+      - name: Clone sanoid
+        run: |
+          if [ ! -d sanoid_source ]; then
+            git clone --depth 1 https://github.com/jimsalterjrs/sanoid.git sanoid_source
+          fi
+          ls -la sanoid_source/
 
       - name: Create wrapper scripts
         run: |
           mkdir -p output
+          if [ ! -d sanoid_source ]; then
+            echo "ERROR: sanoid_source not found"
+            exit 1
+          fi
           cp -r sanoid_source/* output/
           chmod +x output/sanoid output/syncoid output/findoid
 
@@ -92,6 +104,7 @@ jobs:
 
   test-arm:
     needs: build-arm
+    if: always() && needs.build-arm.result == 'success'
     runs-on: macos-latest
     steps:
       - name: Checkout repository
