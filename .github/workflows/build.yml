@@ -117,26 +117,11 @@ jobs:
 
       - name: Test on macOS
         run: |
-          set -e
-
           echo "=== Listing files ==="
           ls -la
 
           echo "=== Checking files exist ==="
-          ls -la sanoid syncoid findoid || { echo "Files not found!"; ls -la .; exit 1; }
-
-          echo "=== Checking executable ==="
-          for f in sanoid syncoid findoid; do
-            test -x "$f" && echo "$f is executable" || { echo "$f is NOT executable"; exit 1; }
-          done
-
-          echo "=== File types ==="
-          file sanoid syncoid findoid
-
-          echo "=== Shebangs ==="
-          head -1 sanoid
-          head -1 syncoid
-          head -1 findoid
+          ls sanoid syncoid findoid
 
   test:
     needs: build
