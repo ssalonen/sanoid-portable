@@ -119,17 +119,17 @@ jobs:
         run: |
           set -e
 
-          echo "Current directory:"
-          pwd
-          ls -la
+          ls -la sanoid syncoid findoid
 
-          echo "---"
-          echo "Looking for output directory:"
-          ls -la output/ 2>/dev/null || echo "output/ not found"
+          for f in sanoid syncoid findoid; do
+            test -x "$f" || { echo "$f is not executable"; exit 1; }
+          done
 
-          echo "---"
-          echo "All files:"
-          find . -type f 2>/dev/null | head -20
+          file sanoid syncoid findoid
+
+          head -1 sanoid
+          head -1 syncoid
+          head -1 findoid
 
   test:
     needs: build
