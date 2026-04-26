@@ -98,3 +98,4 @@ release as an artifact.
 
 This project is licensed under the GPL v3.0 license - see the [LICENSE](LICENSE) file for details.
 # test
+# Trigger
