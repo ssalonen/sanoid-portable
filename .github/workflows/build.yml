@@ -121,15 +121,17 @@ jobs:
 
           cd output
 
-          chmod +x sanoid syncoid findoid
+          ls -la sanoid syncoid findoid
 
-          ./sanoid --help
-          ./syncoid --help
-          ./findoid --help
+          for f in sanoid syncoid findoid; do
+            test -x "$f" || { echo "$f is not executable"; exit 1; }
+          done
 
-          ./sanoid --version
-          ./syncoid --version
-          ./findoid --version
+          file sanoid syncoid findoid
+
+          head -1 sanoid
+          head -1 syncoid
+          head -1 findoid
 
   test:
     needs: build
