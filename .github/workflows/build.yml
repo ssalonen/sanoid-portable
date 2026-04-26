@@ -64,7 +64,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cpanm -T Config::IniFiles Capture::Tiny
+          cpanm -T Config::IniFiles Capture::Tiny PAR::Packer
+
+      - name: Fix PAR::Packer version
+        run: |
+          perl -MExtUtils::Command -e 'touch' /System/Library/Perl/Extras/5.34/PAR/StrippedPARL/Static.pm
 
       - name: Clone sanoid
         run: |
