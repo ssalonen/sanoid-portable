@@ -62,7 +62,7 @@ jobs:
       - name: Install PERL_MM_USE_DEFAULT
         run: echo "PERL_MM_USE_DEFAULT=1" >> $GITHUB_ENV
 
-- name: Install dependencies
+      - name: Install dependencies
         run: |
           cpanm -T Config::IniFiles Capture::Tiny
           cpanm --uninstall PAR::Packer || true
