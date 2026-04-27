@@ -51,7 +51,7 @@ git log -1
 
 echo 'Applying custom patches to sanoid scripts to support bundling in APPerl binary...'
 for tool in sanoid syncoid findoid; do
-    patch < "${repo_root}/patches/${tool}.patch"
+    patch < "${repo_root}/ape-patches/${tool}.patch"
 done
 popd > /dev/null
 echo ''
@@ -68,8 +68,9 @@ echo ''
 ln -s perl.com apperlm
 
 cp "${repo_root}/apperl-project.json" .
-cp "${repo_root}/sanoid-portable.pl" .
+cp "${repo_root}/sanoid-portable-ape.pl" .
 cp "${repo_root}/versions.json" .
+cp -a "${repo_root}/SanoidPortable" .
 
 echo 'Installing build dependencies...'
 ./apperlm install-build-deps
