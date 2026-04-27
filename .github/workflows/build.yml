@@ -73,7 +73,7 @@ jobs:
           echo "cpanm    -> $(command -v cpanm)"
           head -1 "$(command -v cpanm)"
 
-      - name: Install Perl modules into a clean local::lib
+      - name: Install Perl modules into a clean prefix
         run: |
           set -e
           # Wipe any stale per-version directories left from a previous run
@@ -81,19 +81,30 @@ jobs:
           rm -rf "$HOME/perl5"
           cpanm --local-lib="$HOME/perl5" --notest \
             Config::IniFiles Capture::Tiny PAR::Packer
+          # Expose the local prefix to all later steps without depending on
+          # local::lib being importable (cpanm bundles it but doesn't install
+          # it into --local-lib= unless asked).
+          echo "$HOME/perl5/bin" >> "$GITHUB_PATH"
+          echo "PERL5LIB=$HOME/perl5/lib/perl5" >> "$GITHUB_ENV"
 
       - name: Build ARM binary with PAR::Packer
         run: |
           set -e
 
-          # local::lib sets PATH (puts ~/perl5/bin first) and PERL5LIB
-          # for the same perl that cpanm just used to install PAR::Packer.
-          eval "$(perl -I"$HOME/perl5/lib/perl5" -Mlocal::lib="$HOME/perl5")"
-
           echo "perl     -> $(command -v perl)"
           perl -e 'printf "perl version %vd at %s\n", $^V, $^X'
           echo "pp       -> $(command -v pp)"
           head -1 "$(command -v pp)"
+
+          # Sanity check: pp must be the one we just installed, not the
+          # /usr/bin/pp that ships on the runner image.
+          case "$(command -v pp)" in
+            "$HOME/perl5/bin/pp") ;;
+            *)
+              echo "ERROR: pp resolved outside \$HOME/perl5/bin -- PATH is wrong" >&2
+              exit 1
+              ;;
+          esac
 
           if [ -d sanoid_source ]; then
             rm -rf sanoid_source
@@ -104,7 +115,7 @@ jobs:
           cd sanoid_source
           # Invoke pp through the explicit perl interpreter so a stray
           # shebang can't redirect us to /usr/bin/perl.
-          perl "$(command -v pp)" -o ../output/sanoid-portable sanoid
+          perl "$HOME/perl5/bin/pp" -o ../output/sanoid-portable sanoid
 
       - name: Set artifact name
         id: set_artifact_name
