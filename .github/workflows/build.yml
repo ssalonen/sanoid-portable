@@ -65,6 +65,7 @@ jobs:
       - name: Install dependencies
         run: |
           cpanm -T Config::IniFiles Capture::Tiny
+          cpanm -f PAR::Packer
 
       - name: Build ARM binary with PAR::Packer
         run: |
