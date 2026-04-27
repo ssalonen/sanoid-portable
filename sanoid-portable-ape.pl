@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use lib '/zip/lib';
 use FindBin;
 use JSON::PP;
 use SanoidPortable::Info qw(print_info);
