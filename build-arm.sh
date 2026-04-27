@@ -47,19 +47,21 @@ popd > /dev/null
 echo "Building sanoid-portable (darwin-arm64) with PAR::Packer..."
 cd sanoid_source
 
-# Pack the dispatcher as the main script; bundle all three tools as data
-# files and include their non-core Perl dependencies explicitly (pp only
-# scans the main script for deps, not the bundled tool scripts).
+# Pack the dispatcher as the main script and list the three tool scripts as
+# additional input files so pp runs -c (compile-time dep detection) on them.
+# They are also bundled via -a at bin/ so the dispatcher can find them at a
+# known archive path; the script/ copies added by pp as additional inputs are
+# harmless duplicates.
 perl "${PP_PATH}" \
   -I "${repo_root}" \
-  -M Config::IniFiles \
-  -M Capture::Tiny \
+  -c \
   -a "sanoid;bin/sanoid" \
   -a "syncoid;bin/syncoid" \
   -a "findoid;bin/findoid" \
   -a "${repo_root}/versions.json;versions.json" \
   -o ../sanoid-portable \
-  "${repo_root}/sanoid-portable-arm.pl"
+  "${repo_root}/sanoid-portable-arm.pl" \
+  sanoid syncoid findoid
 
 popd > /dev/null
 
