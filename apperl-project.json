@@ -19,7 +19,7 @@
         ],
         "lib": [
           "versions.json",
-          "SanoidPortable/Info.pm"
+          "SanoidPortable"
         ]
       }
     }
