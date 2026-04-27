@@ -75,8 +75,14 @@ jobs:
           git clone --depth 1 https://github.com/jimsalterjrs/sanoid.git sanoid_source
 
           cd sanoid_source
-          pp -o ../output/sanoid-portable sanoid --icon=../../sanoid.png || {
+          pp -o ../output/sanoid-portable sanoid || {
             echo "PAR::Packer failed, falling back to scripts"
+            mkdir -p ../output
+            cp -r . ../output/
+            chmod +x ../output/sanoid ../output/syncoid ../output/findoid
+            for t in sanoid syncoid findoid; do
+              sed -i '' '1s|#!.*perl.*|#!/usr/bin/perl|' "../output/${t}"
+            done
           }
 
       - name: Set artifact name
