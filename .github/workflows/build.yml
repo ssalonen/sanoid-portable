@@ -68,6 +68,8 @@ jobs:
 
       - name: Build ARM binary with PAR::Packer
         run: |
+          set -e
+
           cpanm -T PAR::Packer
           if [ -d sanoid_source ]; then
             rm -rf sanoid_source
@@ -75,15 +77,7 @@ jobs:
           git clone --depth 1 https://github.com/jimsalterjrs/sanoid.git sanoid_source
 
           cd sanoid_source
-          pp -o ../output/sanoid-portable sanoid || {
-            echo "PAR::Packer failed, falling back to scripts"
-            mkdir -p ../output
-            cp -r . ../output/
-            chmod +x ../output/sanoid ../output/syncoid ../output/findoid
-            for t in sanoid syncoid findoid; do
-              sed -i '' '1s|#!.*perl.*|#!/usr/bin/perl|' "../output/${t}"
-            done
-          }
+          pp -o ../output/sanoid-portable sanoid
 
       - name: Set artifact name
         id: set_artifact_name
