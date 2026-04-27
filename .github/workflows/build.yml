@@ -52,35 +52,59 @@ jobs:
     runs-on: macos-latest
     outputs:
       artifact_name: ${{ steps.set_artifact_name.outputs.artifact_name }}
+    env:
+      PERL_MM_USE_DEFAULT: 1
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install cpanm
-        run: brew install cpanminus
-
-      - name: Install PERL_MM_USE_DEFAULT
-        run: echo "PERL_MM_USE_DEFAULT=1" >> $GITHUB_ENV
-
-      - name: Install dependencies
+      - name: Install Homebrew perl and cpanminus
         run: |
-          cpanm -T Config::IniFiles Capture::Tiny
-          cpanm --uninstall PAR::Packer || true
-          cpanm PAR::Packer
+          brew install perl cpanminus
+          # Put Homebrew perl ahead of /usr/bin/perl so every later step
+          # (cpanm, pp, the pp shebang lookup) resolves to the same perl.
+          echo "$(brew --prefix perl)/bin" >> "$GITHUB_PATH"
+
+      - name: Show perl toolchain (sanity check)
+        run: |
+          echo "PATH=$PATH"
+          echo "perl     -> $(command -v perl)"
+          perl -e 'printf "perl version %vd at %s\n", $^V, $^X'
+          echo "cpanm    -> $(command -v cpanm)"
+          head -1 "$(command -v cpanm)"
+
+      - name: Install Perl modules into a clean local::lib
+        run: |
+          set -e
+          # Wipe any stale per-version directories left from a previous run
+          # so we never end up with PAR::Packer XS for the wrong perl.
+          rm -rf "$HOME/perl5"
+          cpanm --local-lib="$HOME/perl5" --notest \
+            Config::IniFiles Capture::Tiny PAR::Packer
 
       - name: Build ARM binary with PAR::Packer
         run: |
           set -e
 
-          export PERL5LIB="$HOME/perl5/lib/perl5/darwin-thread-multi-2level:$HOME/perl5/lib/perl5:$PERL5LIB"
+          # local::lib sets PATH (puts ~/perl5/bin first) and PERL5LIB
+          # for the same perl that cpanm just used to install PAR::Packer.
+          eval "$(perl -I"$HOME/perl5/lib/perl5" -Mlocal::lib="$HOME/perl5")"
+
+          echo "perl     -> $(command -v perl)"
+          perl -e 'printf "perl version %vd at %s\n", $^V, $^X'
+          echo "pp       -> $(command -v pp)"
+          head -1 "$(command -v pp)"
 
           if [ -d sanoid_source ]; then
             rm -rf sanoid_source
           fi
           git clone --depth 1 https://github.com/jimsalterjrs/sanoid.git sanoid_source
 
+          mkdir -p output
           cd sanoid_source
-          pp -o ../output/sanoid-portable sanoid
+          # Invoke pp through the explicit perl interpreter so a stray
+          # shebang can't redirect us to /usr/bin/perl.
+          perl "$(command -v pp)" -o ../output/sanoid-portable sanoid
 
       - name: Set artifact name
         id: set_artifact_name
