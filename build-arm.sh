@@ -2,7 +2,8 @@
 #
 # Build the macOS arm64 flavor of sanoid-portable using PAR::Packer (pp).
 # The output is a self-extracting darwin-arm64 binary that bundles a perl
-# interpreter and the sanoid scripts -- it is NOT cross-platform.
+# interpreter, a dispatcher, and all three sanoid scripts (sanoid, syncoid,
+# findoid) -- it is NOT cross-platform.
 # Run this on a macOS arm64 host with Homebrew perl + PAR::Packer already
 # installed and ~/perl5/bin first on PATH (see .github/workflows/build.yml,
 # job build-arm). For the portable Linux/FreeBSD flavor, see build-ape.sh.
@@ -45,9 +46,20 @@ popd > /dev/null
 
 echo "Building sanoid-portable (darwin-arm64) with PAR::Packer..."
 cd sanoid_source
-# Invoke pp through the explicit perl interpreter so a stray shebang
-# can't redirect us to /usr/bin/perl.
-perl "${PP_PATH}" -o ../sanoid-portable sanoid
+
+# Pack the dispatcher as the main script; bundle all three tools as data
+# files and include their non-core Perl dependencies explicitly (pp only
+# scans the main script for deps, not the bundled tool scripts).
+perl "${PP_PATH}" \
+  -I "${repo_root}" \
+  -M Config::IniFiles \
+  -M Capture::Tiny \
+  -a "sanoid;bin/sanoid" \
+  -a "syncoid;bin/syncoid" \
+  -a "findoid;bin/findoid" \
+  -a "${repo_root}/versions.json;versions.json" \
+  -o ../sanoid-portable \
+  "${repo_root}/sanoid-portable-arm.pl"
 
 popd > /dev/null
 

@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Initialize build environment
-        run: ./init.sh
+        run: ./init-ape-build.sh
 
       - name: Build sanoid-portable APE binary
         run: |
@@ -126,6 +126,10 @@ jobs:
           chmod +x sanoid-portable
           ./sanoid-portable --help
           ./sanoid-portable --version
+          for tool in sanoid syncoid findoid; do
+            ln -sf sanoid-portable $tool
+            ./$tool --help
+          done
 
   # Smoke + integration tests for the APE binary on Linux and FreeBSD.
   test-ape:

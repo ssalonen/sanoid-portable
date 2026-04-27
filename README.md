@@ -28,12 +28,12 @@ is **not** cross-platform — it only runs on Apple Silicon macOS.
 
 The following files in this repo are APE-specific (they configure the APPerl/Cosmopolitan build):
 
-- `build-ape.sh`, `init.sh`
-- `apperl-project.json`, `sanoid-portable.pl`
-- `patches/` (sanoid script patches required to bundle inside an APPerl zip)
+- `build-ape.sh`, `init-ape-build.sh`
+- `apperl-project.json`, `sanoid-portable-ape.pl`
+- `ape-patches/` (sanoid script patches required to bundle inside an APPerl zip)
 - `test-smoke.sh`, `test-integration.sh` (tests assert the APE-specific `/zip/bin/...` paths)
 
-The macOS arm64 build is fully described by `build-arm.sh` plus the `build-arm` job in
+The macOS arm64 build is fully described by `build-arm.sh`, `sanoid-portable-arm.pl`, and the `build-arm` job in
 `.github/workflows/build.yml`.
 
 `versions.json` and `CHANGELOG.md` are shared.
@@ -98,7 +98,7 @@ Run the initialization script to prepare your environment to build the APE execu
 system:
 
 ```console
-./init.sh
+./init-ape-build.sh
 ```
 
 Build the executable:
