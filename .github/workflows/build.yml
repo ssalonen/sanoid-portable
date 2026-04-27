@@ -72,7 +72,8 @@ jobs:
         run: |
           set -e
 
-          cpanm -T PAR::Packer
+          export PERL5LIB="$HOME/perl5/lib/perl5/darwin-thread-multi-2level:$HOME/perl5/lib/perl5:$PERL5LIB"
+
           if [ -d sanoid_source ]; then
             rm -rf sanoid_source
           fi
