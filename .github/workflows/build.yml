@@ -65,30 +65,19 @@ jobs:
       - name: Install dependencies
         run: |
           cpanm -T Config::IniFiles Capture::Tiny
-          cpanm PAR::Packer || true
 
-      - name: Clone sanoid
+      - name: Build ARM binary with PAR::Packer
         run: |
-          if [ ! -d sanoid_source ]; then
-            git clone --depth 1 https://github.com/jimsalterjrs/sanoid.git sanoid_source
+          cpanm -T PAR::Packer
+          if [ -d sanoid_source ]; then
+            rm -rf sanoid_source
           fi
-          ls -la sanoid_source/
+          git clone --depth 1 https://github.com/jimsalterjrs/sanoid.git sanoid_source
 
-      - name: Create wrapper scripts
-        run: |
-          mkdir -p output
-          if [ ! -d sanoid_source ]; then
-            echo "ERROR: sanoid_source not found"
-            exit 1
-          fi
-          cp -r sanoid_source/* output/
-          chmod +x output/sanoid output/syncoid output/findoid
-
-          for tool in sanoid syncoid findoid; do
-            sed -i '' '1s|#!.*perl.*|#!/usr/bin/perl|' "output/${tool}"
-          done
-
-          ls -la output/
+          cd sanoid_source
+          pp -o ../output/sanoid-portable sanoid --icon=../../sanoid.png || {
+            echo "PAR::Packer failed, falling back to scripts"
+          }
 
       - name: Set artifact name
         id: set_artifact_name
@@ -120,8 +109,21 @@ jobs:
           echo "=== Listing files ==="
           ls -la
 
-          echo "=== Checking files exist ==="
-          ls sanoid syncoid findoid
+          if [ -f sanoid-portable ]; then
+            echo "=== Testing sanoid-portable binary ==="
+            chmod +x sanoid-portable
+            ./sanoid-portable --help
+            ./sanoid-portable --version
+          elif [ -f sanoid ]; then
+            echo "=== Testing sanoid scripts ==="
+            chmod +x sanoid syncoid findoid
+            ./sanoid --help
+            ./syncoid --help
+            ./findoid --help
+          else
+            echo "Error: No sanoid-portable or sanoid found"
+            exit 1
+          fi
 
   test:
     needs: build
