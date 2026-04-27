@@ -5,13 +5,18 @@ on:
   push:
   workflow_call:
     outputs:
-      artifact_name:
-        description: Name of the sanoid-portable artifact uploaded during the build.
-        value: ${{ jobs.build.outputs.artifact_name }}
+      ape_artifact_name:
+        description: Name of the APE (x86_64 Linux/FreeBSD) sanoid-portable artifact.
+        value: ${{ jobs.build-ape.outputs.artifact_name }}
+      arm_artifact_name:
+        description: Name of the macOS arm64 sanoid-portable artifact.
+        value: ${{ jobs.build-arm.outputs.artifact_name }}
   workflow_dispatch:
 
 jobs:
-  build:
+  # APE flavor: single portable x86_64 binary for Linux and FreeBSD,
+  # built with APPerl / Cosmopolitan via build-ape.sh.
+  build-ape:
     runs-on: ubuntu-24.04
     outputs:
       artifact_name: ${{ steps.set_artifact_name.outputs.artifact_name }}
@@ -22,10 +27,8 @@ jobs:
       - name: Initialize build environment
         run: ./init.sh
 
-      - name: Build sanoid-portable binary
+      - name: Build sanoid-portable APE binary
         run: |
-          # Build on Ubuntu
-
           set -e
 
           # Add a new binfmt entry that matches APE's (Actually Portable Executable)'s
@@ -34,11 +37,11 @@ jobs:
           sudo apt install -y binfmt-support
           sudo update-binfmts --install APE /bin/sh --magic MZqFpD
 
-          ./build.sh
+          ./build-ape.sh
 
       - name: Set artifact name
         id: set_artifact_name
-        run: echo "artifact_name=sanoid-portable.${{ github.sha }}.${{ github.run_number }}" >> $GITHUB_OUTPUT
+        run: echo "artifact_name=sanoid-portable.ape.${{ github.sha }}.${{ github.run_number }}" >> $GITHUB_OUTPUT
 
       - name: Upload built sanoid-portable artifact
         uses: actions/upload-artifact@v4
@@ -48,6 +51,8 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  # macOS arm64 flavor: darwin-arm64 self-extracting binary built with
+  # PAR::Packer via build-arm.sh. Not portable to other OSes/arches.
   build-arm:
     runs-on: macos-latest
     outputs:
@@ -87,35 +92,8 @@ jobs:
           echo "$HOME/perl5/bin" >> "$GITHUB_PATH"
           echo "PERL5LIB=$HOME/perl5/lib/perl5" >> "$GITHUB_ENV"
 
-      - name: Build ARM binary with PAR::Packer
-        run: |
-          set -e
-
-          echo "perl     -> $(command -v perl)"
-          perl -e 'printf "perl version %vd at %s\n", $^V, $^X'
-          echo "pp       -> $(command -v pp)"
-          head -1 "$(command -v pp)"
-
-          # Sanity check: pp must be the one we just installed, not the
-          # /usr/bin/pp that ships on the runner image.
-          case "$(command -v pp)" in
-            "$HOME/perl5/bin/pp") ;;
-            *)
-              echo "ERROR: pp resolved outside \$HOME/perl5/bin -- PATH is wrong" >&2
-              exit 1
-              ;;
-          esac
-
-          if [ -d sanoid_source ]; then
-            rm -rf sanoid_source
-          fi
-          git clone --depth 1 https://github.com/jimsalterjrs/sanoid.git sanoid_source
-
-          mkdir -p output
-          cd sanoid_source
-          # Invoke pp through the explicit perl interpreter so a stray
-          # shebang can't redirect us to /usr/bin/perl.
-          perl "$HOME/perl5/bin/pp" -o ../output/sanoid-portable sanoid
+      - name: Build sanoid-portable macOS arm64 binary
+        run: ./build-arm.sh
 
       - name: Set artifact name
         id: set_artifact_name
@@ -125,13 +103,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.set_artifact_name.outputs.artifact_name }}
-          path: output
+          path: output/sanoid-portable
           if-no-files-found: error
           retention-days: 1
 
+  # Smoke-test the macOS arm64 binary on a darwin-arm64 runner.
   test-arm:
     needs: build-arm
-    if: always() && needs.build-arm.result == 'success'
     runs-on: macos-latest
     steps:
       - name: Checkout repository
@@ -142,29 +120,16 @@ jobs:
         with:
           name: ${{ needs.build-arm.outputs.artifact_name }}
 
-      - name: Test on macOS
+      - name: Test on macOS arm64
         run: |
-          echo "=== Listing files ==="
-          ls -la
+          set -e
+          chmod +x sanoid-portable
+          ./sanoid-portable --help
+          ./sanoid-portable --version
 
-          if [ -f sanoid-portable ]; then
-            echo "=== Testing sanoid-portable binary ==="
-            chmod +x sanoid-portable
-            ./sanoid-portable --help
-            ./sanoid-portable --version
-          elif [ -f sanoid ]; then
-            echo "=== Testing sanoid scripts ==="
-            chmod +x sanoid syncoid findoid
-            ./sanoid --help
-            ./syncoid --help
-            ./findoid --help
-          else
-            echo "Error: No sanoid-portable or sanoid found"
-            exit 1
-          fi
-
-  test:
-    needs: build
+  # Smoke + integration tests for the APE binary on Linux and FreeBSD.
+  test-ape:
+    needs: build-ape
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
@@ -173,15 +138,13 @@ jobs:
       - name: Download sanoid-portable artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.build.outputs.artifact_name }}
+          name: ${{ needs.build-ape.outputs.artifact_name }}
 
       - name: Test on Ubuntu
         run: |
-          # Test on Ubuntu
-
           set -e
 
-          # Test the assimiate workaround here
+          # Test the assimilate workaround here
           sudo chmod +x sanoid-portable
           sh ./sanoid-portable --assimilate
 

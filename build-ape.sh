@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+#
+# Build the APE (Actually Portable Executable) flavor of sanoid-portable.
+# The output is a single x86_64 binary that runs on Linux and FreeBSD via
+# Cosmopolitan / APPerl. Run this on a Debian/Ubuntu host (see init.sh).
+# For the macOS arm64 flavor, see build-arm.sh.
 
 set -euo pipefail
 
