@@ -47,7 +47,7 @@ The following steps download the APE binary, make it executable, transform
 binary for your system, and set up symbolic links for each tool (`sanoid`, `syncoid`, `findoid`):
 
 ```console
-wget https://github.com/decoyjoe/sanoid-portable/releases/latest/download/sanoid-portable
+wget https://github.com/ssalonen/sanoid-portable/releases/latest/download/sanoid-portable
 chmod +x sanoid-portable
 sh ./sanoid-portable --assimilate # Transforms portable into a native binary
 ln -s sanoid-portable sanoid
@@ -58,7 +58,7 @@ ln -s sanoid-portable findoid
 ### macOS (Apple Silicon)
 
 ```console
-wget https://github.com/decoyjoe/sanoid-portable/releases/latest/download/sanoid-portable-darwin-arm64 -O sanoid-portable
+wget https://github.com/ssalonen/sanoid-portable/releases/latest/download/sanoid-portable-darwin-arm64 -O sanoid-portable
 chmod +x sanoid-portable
 ln -s sanoid-portable sanoid
 ln -s sanoid-portable syncoid
